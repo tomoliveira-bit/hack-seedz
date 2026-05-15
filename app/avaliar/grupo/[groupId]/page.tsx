@@ -16,7 +16,7 @@ export default function GrupoPage({
   const groupId = Number(groupIdStr);
 
   const router = useRouter();
-  const [evaluatorId, setEvaluatorId] = useState<string | null>(null);
+  const [evaluatorName, setEvaluatorName] = useState<string | null>(null);
   const [groupName, setGroupName] = useState<string>("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [evaluatedSet, setEvaluatedSet] = useState<Set<string>>(new Set());
@@ -24,16 +24,16 @@ export default function GrupoPage({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = localStorage.getItem("evaluator_id");
-    if (!id) {
+    const n = localStorage.getItem("evaluator_name");
+    if (!n) {
       router.replace("/");
       return;
     }
-    setEvaluatorId(id);
+    setEvaluatorName(n);
   }, [router]);
 
   useEffect(() => {
-    if (!evaluatorId || !Number.isFinite(groupId)) return;
+    if (!evaluatorName || !Number.isFinite(groupId)) return;
     let mounted = true;
     (async () => {
       const [g, c, e] = await Promise.all([
@@ -50,7 +50,7 @@ export default function GrupoPage({
         supabase
           .from("evaluations")
           .select("candidate_id")
-          .eq("evaluator_id", evaluatorId),
+          .ilike("evaluator_name", evaluatorName),
       ]);
       if (!mounted) return;
       if (g.error || c.error || e.error) {
@@ -68,9 +68,9 @@ export default function GrupoPage({
     return () => {
       mounted = false;
     };
-  }, [evaluatorId, groupId]);
+  }, [evaluatorName, groupId]);
 
-  if (!evaluatorId) return null;
+  if (!evaluatorName) return null;
 
   return (
     <main className="min-h-screen px-4 py-6 max-w-2xl mx-auto pb-12">

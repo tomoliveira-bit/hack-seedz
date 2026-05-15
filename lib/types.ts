@@ -1,8 +1,3 @@
-export type Evaluator = {
-  id: string;
-  name: string;
-};
-
 export type Group = {
   id: number;
   name: string;
@@ -29,7 +24,7 @@ export type Scores = Record<CriterionKey, 1 | 2 | 3 | null>;
 
 export type Evaluation = {
   id: string;
-  evaluator_id: string;
+  evaluator_name: string;
   candidate_id: string;
   habilidade_ia: number;
   conhecimento_seedz: number;

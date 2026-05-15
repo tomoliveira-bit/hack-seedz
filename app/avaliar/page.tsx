@@ -13,25 +13,22 @@ type GroupWithCounts = Group & {
 
 export default function EscolherGrupoPage() {
   const router = useRouter();
-  const [evaluatorName, setEvaluatorName] = useState("");
-  const [evaluatorId, setEvaluatorId] = useState<string | null>(null);
+  const [evaluatorName, setEvaluatorName] = useState<string | null>(null);
   const [groups, setGroups] = useState<GroupWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = localStorage.getItem("evaluator_id");
-    const n = localStorage.getItem("evaluator_name") ?? "";
-    if (!id) {
+    const n = localStorage.getItem("evaluator_name");
+    if (!n) {
       router.replace("/");
       return;
     }
-    setEvaluatorId(id);
     setEvaluatorName(n);
   }, [router]);
 
   useEffect(() => {
-    if (!evaluatorId) return;
+    if (!evaluatorName) return;
     let mounted = true;
     (async () => {
       const [g, c, e] = await Promise.all([
@@ -40,7 +37,7 @@ export default function EscolherGrupoPage() {
         supabase
           .from("evaluations")
           .select("candidate_id")
-          .eq("evaluator_id", evaluatorId),
+          .ilike("evaluator_name", evaluatorName),
       ]);
       if (!mounted) return;
       if (g.error || c.error || e.error) {
@@ -73,15 +70,15 @@ export default function EscolherGrupoPage() {
     return () => {
       mounted = false;
     };
-  }, [evaluatorId]);
+  }, [evaluatorName]);
 
   const handleLogout = () => {
-    localStorage.removeItem("evaluator_id");
     localStorage.removeItem("evaluator_name");
+    localStorage.removeItem("evaluator_id");
     router.push("/");
   };
 
-  if (!evaluatorId) return null;
+  if (!evaluatorName) return null;
 
   return (
     <main className="min-h-screen px-4 py-6 max-w-2xl mx-auto pb-12">

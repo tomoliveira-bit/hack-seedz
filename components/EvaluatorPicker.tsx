@@ -2,52 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function EvaluatorPicker() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const normalized = name.trim();
+    const normalized = name.trim().replace(/\s+/g, " ");
     if (!normalized) return;
-
     setSubmitting(true);
-    setError(null);
-
-    const { data: existing, error: findError } = await supabase
-      .from("evaluators")
-      .select("id, name")
-      .ilike("name", normalized)
-      .maybeSingle();
-
-    if (findError) {
-      setSubmitting(false);
-      setError("Algo deu errado. Tente novamente.");
-      return;
-    }
-
-    let evaluator = existing;
-
-    if (!evaluator) {
-      const { data: inserted, error: insertError } = await supabase
-        .from("evaluators")
-        .insert({ name: normalized })
-        .select("id, name")
-        .single();
-      if (insertError || !inserted) {
-        setSubmitting(false);
-        setError("Não consegui salvar seu nome. Tente novamente.");
-        return;
-      }
-      evaluator = inserted;
-    }
-
-    localStorage.setItem("evaluator_id", evaluator.id);
-    localStorage.setItem("evaluator_name", evaluator.name);
+    localStorage.setItem("evaluator_name", normalized);
     router.push("/avaliar");
   };
 
@@ -66,8 +32,6 @@ export default function EvaluatorPicker() {
           className="w-full h-14 rounded-xl bg-seedz-navy-2 border-2 border-white/15 px-4 text-white text-base focus:border-seedz-green-bright focus:outline-none placeholder:text-white/30"
         />
       </label>
-
-      {error && <p className="text-sm text-seedz-yellow">{error}</p>}
 
       <button
         type="submit"

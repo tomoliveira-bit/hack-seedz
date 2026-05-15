@@ -24,7 +24,7 @@ export default function AvaliarCandidatoPage({
   const { candidateId } = use(params);
   const router = useRouter();
 
-  const [evaluatorId, setEvaluatorId] = useState<string | null>(null);
+  const [evaluatorName, setEvaluatorName] = useState<string | null>(null);
   const [candidateName, setCandidateName] = useState<string>("");
   const [groupName, setGroupName] = useState<string>("");
   const [groupId, setGroupId] = useState<number | null>(null);
@@ -35,16 +35,16 @@ export default function AvaliarCandidatoPage({
   const [missing, setMissing] = useState<Set<CriterionKey>>(new Set());
 
   useEffect(() => {
-    const id = localStorage.getItem("evaluator_id");
-    if (!id) {
+    const n = localStorage.getItem("evaluator_name");
+    if (!n) {
       router.replace("/");
       return;
     }
-    setEvaluatorId(id);
+    setEvaluatorName(n);
   }, [router]);
 
   useEffect(() => {
-    if (!evaluatorId || !candidateId) return;
+    if (!evaluatorName || !candidateId) return;
     let mounted = true;
     (async () => {
       const [cand, exist] = await Promise.all([
@@ -58,7 +58,7 @@ export default function AvaliarCandidatoPage({
           .select(
             "habilidade_ia, conhecimento_seedz, curiosidade, inovacao, raca, trabalho_equipe"
           )
-          .eq("evaluator_id", evaluatorId)
+          .ilike("evaluator_name", evaluatorName)
           .eq("candidate_id", candidateId)
           .maybeSingle(),
       ]);
@@ -94,7 +94,7 @@ export default function AvaliarCandidatoPage({
     return () => {
       mounted = false;
     };
-  }, [evaluatorId, candidateId]);
+  }, [evaluatorName, candidateId]);
 
   const setScore = (key: CriterionKey, value: 1 | 2 | 3) => {
     setScores((prev) => ({ ...prev, [key]: value }));
@@ -107,7 +107,7 @@ export default function AvaliarCandidatoPage({
   };
 
   const handleSave = async () => {
-    if (!evaluatorId) return;
+    if (!evaluatorName) return;
     const missingKeys = CRITERIA.filter((c) => scores[c.key] === null).map(
       (c) => c.key
     );
@@ -118,7 +118,7 @@ export default function AvaliarCandidatoPage({
     setSaving(true);
     setError(null);
     const payload = {
-      evaluator_id: evaluatorId,
+      evaluator_name: evaluatorName,
       candidate_id: candidateId,
       habilidade_ia: scores.habilidade_ia,
       conhecimento_seedz: scores.conhecimento_seedz,
@@ -130,7 +130,7 @@ export default function AvaliarCandidatoPage({
     };
     const { error } = await supabase
       .from("evaluations")
-      .upsert(payload, { onConflict: "evaluator_id,candidate_id" });
+      .upsert(payload, { onConflict: "evaluator_name,candidate_id" });
     if (error) {
       setSaving(false);
       setError("Não consegui salvar. Tente novamente.");
@@ -139,7 +139,7 @@ export default function AvaliarCandidatoPage({
     router.push(groupId ? `/avaliar/grupo/${groupId}` : "/avaliar");
   };
 
-  if (!evaluatorId) return null;
+  if (!evaluatorName) return null;
 
   return (
     <main className="min-h-screen px-4 py-6 max-w-xl mx-auto pb-32">

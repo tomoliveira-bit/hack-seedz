@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hackathon Seedz · App de Avaliação
 
-## Getting Started
+App web para os 15 avaliadores Seedz classificarem os 22 candidatos do Programa de Estágio Tech 2026 em tempo real durante o sprint.
 
-First, run the development server:
+- **Avaliadores** (`/`) — selecionam o nome, vão pra lista, avaliam 6 critérios por candidato
+- **Banca** (`/banca`) — ranking completo, atualiza ao vivo via Supabase Realtime
+- **Telão** (`/vencedor`) — mostra só o 1º lugar, atualiza ao vivo
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Stack: Next.js 16 (App Router) + TypeScript + Tailwind 4 + Supabase + Vercel.
+
+---
+
+## Setup pra rodar local
+
+1. `npm install`
+2. Copie `.env.local.example` pra `.env.local` e preencha as 2 variáveis do Supabase
+3. `npm run dev` — abre em http://localhost:3000
+
+---
+
+## Deploy — passo a passo (assumindo zero experiência)
+
+### 1) Criar projeto no Supabase
+
+1. Vá em https://supabase.com e crie uma conta (grátis)
+2. **New project** → escolha nome (ex: `hackathon-seedz`), senha forte do banco, região mais próxima (São Paulo)
+3. Espera ~2min até o projeto ficar verde
+4. No menu lateral, **Settings → API**:
+   - Copie **Project URL** → essa é a `NEXT_PUBLIC_SUPABASE_URL`
+   - Copie **anon public key** → essa é a `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - Guarda as duas, vai precisar no passo 4
+
+### 2) Rodar o SQL do schema
+
+1. No menu lateral do Supabase, abra **SQL Editor**
+2. Clique **New query**
+3. Cole o conteúdo de [`supabase/migrations/00001_init.sql`](supabase/migrations/00001_init.sql) e rode (botão **Run**)
+4. Nova query: cole o conteúdo de [`supabase/seed.sql`](supabase/seed.sql) e rode
+
+### 3) Conferir o Realtime
+
+A migration já habilita Realtime na tabela `evaluations`. Pra conferir:
+- **Database → Replication** → veja se a tabela `evaluations` aparece marcada na publication `supabase_realtime`. Se não, marca.
+
+### 4) Configurar `.env.local` local (opcional, só pra testar antes de subir)
+
+Crie o arquivo `.env.local` na raiz do projeto com:
+```
+NEXT_PUBLIC_SUPABASE_URL=cole_aqui
+NEXT_PUBLIC_SUPABASE_ANON_KEY=cole_aqui
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Roda `npm run dev` e testa em http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5) Subir pro GitHub
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+git add .
+git commit -m "App de avaliação Hackathon Seedz"
+gh repo create hack-seedz --public --source=. --push
+```
 
-## Learn More
+(Se `gh` ainda não está autenticado, rode `gh auth login` primeiro — escolha GitHub.com, HTTPS, login pelo navegador.)
 
-To learn more about Next.js, take a look at the following resources:
+### 6) Deploy na Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+vercel --prod
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Na primeira vez vai pedir login (`vercel login`). Depois ele detecta Next.js, pergunta o nome do projeto e sobe. Quando pedir as env vars, cole `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-## Deploy on Vercel
+URLs finais:
+- `https://<seu-projeto>.vercel.app/` — avaliadores
+- `https://<seu-projeto>.vercel.app/banca` — banca
+- `https://<seu-projeto>.vercel.app/vencedor` — telão
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Critérios de avaliação
+
+Escala 1-3 em 6 critérios:
+
+1. Habilidade com IA
+2. Conhecimento Seedz/agro
+3. Curiosidade
+4. Inovação
+5. Raça
+6. Trabalho em equipe
+
+(1 = abaixo, 2 = no esperado, 3 = acima)
+
+---
+
+## Checklist de testes — rodar antes de sábado
+
+- [ ] 2 avaliadores diferentes logam simultaneamente e veem todos os 22 candidatos
+- [ ] Salvo uma avaliação, status fica "Avaliado"
+- [ ] Volto ao formulário, valores estão preenchidos
+- [ ] Edito uma nota, salvo, `/banca` atualiza em outra aba sozinho (realtime)
+- [ ] `/banca` filtro por grupo funciona
+- [ ] `/vencedor` mostra o candidato com maior pontuação total
+- [ ] `/vencedor` atualiza automaticamente quando uma nota muda
+- [ ] Funciona bem em celular 375px de largura
+- [ ] Não dá pra salvar sem preencher os 6 critérios
+- [ ] Mesmo avaliador não cria avaliações duplicadas
+
+---
+
+## Estrutura
+
+```
+app/
+  page.tsx                          → login do avaliador
+  avaliar/page.tsx                  → lista de candidatos por grupo
+  avaliar/[candidateId]/page.tsx    → formulário de avaliação
+  banca/page.tsx                    → ranking completo (ao vivo)
+  vencedor/page.tsx                 → telão (1º lugar, ao vivo)
+components/
+  EvaluatorPicker, CandidateCard, ScoreButton, RankingTable
+lib/
+  supabase.ts, types.ts
+supabase/
+  migrations/00001_init.sql, seed.sql
+```
+
+---
+
+## Notas de operação
+
+- Não há autenticação. O "login" é apenas selecionar o nome no dropdown — `evaluator_id` fica em `localStorage`.
+- A constraint `unique(evaluator_id, candidate_id)` garante que um mesmo avaliador não duplica avaliações; o salvar usa `upsert`.
+- Realtime escuta `*` (INSERT/UPDATE/DELETE) em `evaluations` nas páginas `/banca` e `/vencedor`.
+- `/avaliar` não usa realtime — só estado local e o fetch inicial.

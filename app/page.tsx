@@ -10,7 +10,7 @@ export default function LoginPage() {
           </p>
           <h1 className="text-3xl font-bold leading-tight">Avaliação</h1>
           <p className="text-white/70 text-base">
-            Selecione seu nome para começar
+            Digite seu nome para começar
           </p>
         </header>
 

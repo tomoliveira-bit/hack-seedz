@@ -76,6 +76,7 @@ alter table evaluations enable row level security;
 
 drop policy if exists "anon read groups" on groups;
 drop policy if exists "anon read evaluators" on evaluators;
+drop policy if exists "anon insert evaluators" on evaluators;
 drop policy if exists "anon read candidates" on candidates;
 drop policy if exists "anon read evaluations" on evaluations;
 drop policy if exists "anon write evaluations" on evaluations;
@@ -83,6 +84,7 @@ drop policy if exists "anon update evaluations" on evaluations;
 
 create policy "anon read groups" on groups for select using (true);
 create policy "anon read evaluators" on evaluators for select using (true);
+create policy "anon insert evaluators" on evaluators for insert with check (true);
 create policy "anon read candidates" on candidates for select using (true);
 create policy "anon read evaluations" on evaluations for select using (true);
 create policy "anon write evaluations" on evaluations for insert with check (true);

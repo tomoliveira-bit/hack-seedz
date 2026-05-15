@@ -27,6 +27,7 @@ export default function AvaliarCandidatoPage({
   const [evaluatorId, setEvaluatorId] = useState<string | null>(null);
   const [candidateName, setCandidateName] = useState<string>("");
   const [groupName, setGroupName] = useState<string>("");
+  const [groupId, setGroupId] = useState<number | null>(null);
   const [scores, setScores] = useState<Scores>(EMPTY_SCORES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -70,9 +71,11 @@ export default function AvaliarCandidatoPage({
       if (cand.data) {
         const raw = cand.data as unknown as {
           name: string;
+          group_id: number;
           groups: { name: string } | { name: string }[] | null;
         };
         setCandidateName(raw.name);
+        setGroupId(raw.group_id);
         const g = Array.isArray(raw.groups) ? raw.groups[0] : raw.groups;
         setGroupName(g?.name ?? "");
       }
@@ -133,7 +136,7 @@ export default function AvaliarCandidatoPage({
       setError("Não consegui salvar. Tente novamente.");
       return;
     }
-    router.push("/avaliar");
+    router.push(groupId ? `/avaliar/grupo/${groupId}` : "/avaliar");
   };
 
   if (!evaluatorId) return null;
@@ -141,7 +144,7 @@ export default function AvaliarCandidatoPage({
   return (
     <main className="min-h-screen px-4 py-6 max-w-xl mx-auto pb-32">
       <Link
-        href="/avaliar"
+        href={groupId ? `/avaliar/grupo/${groupId}` : "/avaliar"}
         className="inline-block text-sm text-white/70 hover:text-seedz-yellow mb-4"
       >
         ← Voltar
